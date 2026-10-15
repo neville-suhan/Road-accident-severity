@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predict | RoadSafe AI</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --surface: rgba(255, 255, 255, 0.05);
+      --surface-strong: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.10);
+      --text: #e6e9f5;
+      --muted: #9aa3c4;
+      --primary: #6c8cff;
+      --primary-2: #a06bff;
+      --radius: 18px;
+      --shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(108, 140, 255, 0.18), transparent 40%),
+        radial-gradient(circle at 85% 30%, rgba(160, 107, 255, 0.15), transparent 40%),
+        var(--bg);
+      background-attachment: fixed;
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+    }
+
+    main { flex: 1; width: 100%; }
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 3rem;
+    }
+
+    .logo { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; }
+    .logo span {
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* Navbar */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(11, 16, 32, 0.7);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .navbar nav { display: flex; gap: 0.5rem; }
+    .navbar nav a {
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      color: var(--muted);
+      font-weight: 500;
+      transition: all 0.25s ease;
+    }
+    .navbar nav a:hover { color: var(--text); background: var(--surface-strong); }
+    .navbar nav a.active {
+      color: #fff;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.8rem 1.6rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary {
+      color: #fff;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+      box-shadow: 0 8px 24px rgba(108, 140, 255, 0.35);
+    }
+    .btn-primary:hover { box-shadow: 0 12px 32px rgba(108, 140, 255, 0.5); }
+    .btn-ghost {
+      color: var(--text);
+      background: var(--surface);
+      border-color: var(--border);
+    }
+    .btn-ghost:hover { background: var(--surface-strong); }
+
+    /* Page header */
+    .page-head { margin-bottom: 2rem; }
+    .page-head h1 { font-size: 2.2rem; letter-spacing: -0.02em; margin-bottom: 0.4rem; }
+    .page-head p { color: var(--muted); }
+
+    /* Alert */
+    .alert {
+      padding: 1rem 1.2rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fecaca;
+    }
+
+    /* Form */
+    .predict-form { display: flex; flex-direction: column; gap: 1.5rem; }
+    .form-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 1.8rem;
+      backdrop-filter: blur(10px);
+    }
+    .form-card legend {
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 0 0.6rem;
+      margin-left: -0.6rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.2rem 1.5rem;
+      margin-top: 0.8rem;
+    }
+    .field { display: flex; flex-direction: column; gap: 0.45rem; }
+    .field label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .field select {
+      appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+      background-position: calc(100% - 20px) 55%, calc(100% - 15px) 55%;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      padding-right: 2.5rem;
+    }
+    .field select option { background: #121a33; color: var(--text); }
+    .field input::placeholder { color: #5f6887; }
+    .field input:focus,
+    .field select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(108, 140, 255, 0.2);
+      background: rgba(255, 255, 255, 0.07);
+    }
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.7s ease both; }
+    .delay-1 { animation-delay: 0.1s; }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .navbar { padding: 1rem; }
+      .form-actions { flex-direction: column-reverse; }
+      .form-actions .btn { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <a href="/" class="logo">🚦 RoadSafe<span>AI</span></a>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/predict" class="active">Predict</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="page-head fade-up">
+      <h1>Predict accident severity</h1>
+      <p>Fill in the details of the accident scenario below. All fields are required.</p>
+    </div>
+
+    {% if error %}
+      <div class="alert fade-up">⚠️ {{ error }}</div>
+    {% endif %}
+
+    <form action="/predict" method="post" class="predict-form fade-up delay-1">
+
+      <!-- Time & Date -->
+      <fieldset class="form-card">
+        <legend>🕒 Time &amp; Date</legend>
+        <div class="form-grid">
+          <div class="field">
+            <label for="Day_of_Week">Day of week</label>
+            <select id="Day_of_Week" name="Day_of_Week" required>
+              <option value="">Select day</option>
+              <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+              <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="Accident_Year">Year</label>
+            <select id="Accident_Year" name="Accident_Year" required>
+              <option value="">Select year</option>
+              <option value="2021">2021</option>
+              <option value="2022">2022</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="Accident_Month">Month (1–12)</label>
+            <input id="Accident_Month" name="Accident_Month" type="number" min="1" max="12" placeholder="e.g. 7" required>
+          </div>
+          <div class="field">
+            <label for="Accident_Hour">Hour (0–23)</label>
+            <input id="Accident_Hour" name="Accident_Hour" type="number" min="0" max="23" placeholder="e.g. 17" required>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Location -->
+      <fieldset class="form-card">
+        <legend>📍 Location</legend>
+        <div class="form-grid">
+          <div class="field">
+            <label for="Latitude">Latitude</label>
+            <input id="Latitude" name="Latitude" type="number" step="any" min="49.8" max="60.9" placeholder="e.g. 51.5074" required>
+          </div>
+          <div class="field">
+            <label for="Longitude">Longitude</label>
+            <input id="Longitude" name="Longitude" type="number" step="any" min="-8.7" max="1.8" placeholder="e.g. -0.1278" required>
+          </div>
+          <div class="field">
+            <label for="Urban_or_Rural_Area">Area type</label>
+            <select id="Urban_or_Rural_Area" name="Urban_or_Rural_Area" required>
+              <option value="">Select area</option>
+              <option>Urban</option>
+              <option>Rural</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="Road_Type">Road type</label>
+            <select id="Road_Type" name="Road_Type" required>
+              <option value="">Select road type</option>
+              <option>One way street</option>
+              <option>Single carriageway</option>
+              <option>Dual carriageway</option>
+              <option>Roundabout</option>
+              <option>Slip road</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Junction & Road -->
+      <fieldset class="form-card">
+        <legend>🛣️ Junction &amp; Road</legend>
+        <div class="form-grid">
+          <div class="field">
+            <label for="Junction_Control">Junction control</label>
+            <select id="Junction_Control" name="Junction_Control" required>
+              <option value="">Select control</option>
+              <option>Give way or uncontrolled</option>
+              <option>Auto traffic signal</option>
+              <option>Stop sign</option>
+              <option>Authorised person</option>
+              <option>Data missing or out of range</option>
+              <option>Not at junction or within 20 metres</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="Junction_Detail">Junction detail</label>
+            <select id="Junction_Detail" name="Junction_Detail" required>
+              <option value="">Select junction</option>
+              <option>T or staggered junction</option>
+              <option>Crossroads</option>
+              <option>Roundabout</option>
+              <option>Mini-roundabout</option>
+              <option>More than 4 arms (not roundabout)</option>
+              <option>Private drive or entrance</option>
+              <option>Slip road</option>
+              <option>Other junction</option>
+              <option>Not at junction or within 20 metres</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="Speed_limit">Speed limit (mph)</label>
+            <select id="Speed_limit" name="Speed_limit" required>
+              <option value="">Select limit</option>
+              <option value="10">10</option><option value="15">15</option>
+              <option value="20">20</option><option value="30">30</option>
+              <option value="40">40</option><option value="50">50</option>
+              <option value="60">60</option><option value="70">70</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="Road_Surface_Conditions">Road surface</label>
+            <select id="Road_Surface_Conditions" name="Road_Surface_Conditions" required>
+              <option value="">Select surface</option>
+              <option>Dry</option>
+              <option>Wet or damp</option>
+              <option>Frost or ice</option>
+              <option>Snow</option>
+              <option>Flood over 3cm. deep</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Environment -->
+      <fieldset class="form-card">
+        <legend>🌦️ Environment</legend>
+        <div class="form-grid">
+          <div class="field">
+            <label for="Light_Conditions">Light conditions</label>
+            <select id="Light_Conditions" name="Light_Conditions" required>
+              <option value="">Select lighting</option>
+              <option>Daylight</option>
+              <option>Darkness - lights lit</option>
+              <option>Darkness - lights unlit</option>
+              <option>Darkness - no lighting</option>
+              <option>Darkness - lighting unknown</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="Weather_Conditions">Weather</label>
+            <select id="Weather_Conditions" name="Weather_Conditions" required>
+              <option value="">Select weather</option>
+              <option>Fine no high winds</option>
+              <option>Fine + high winds</option>
+              <option>Raining no high winds</option>
+              <option>Raining + high winds</option>
+              <option>Snowing no high winds</option>
+              <option>Snowing + high winds</option>
+              <option>Fog or mist</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Vehicles -->
+      <fieldset class="form-card">
+        <legend>🚗 Vehicles</legend>
+        <div class="form-grid">
+          <div class="field">
+            <label for="Number_of_Vehicles">Number of vehicles</label>
+            <input id="Number_of_Vehicles" name="Number_of_Vehicles" type="number" min="1" max="50" placeholder="e.g. 2" required>
+          </div>
+          <div class="field">
+            <label for="Vehicle_Type">Vehicle type</label>
+            <select id="Vehicle_Type" name="Vehicle_Type" required>
+              <option value="">Select vehicle</option>
+              <option>Car</option>
+              <option>Taxi/Private hire car</option>
+              <option>Van / Goods 3.5 tonnes mgw or under</option>
+              <option>Goods over 3.5t. and under 7.5t</option>
+              <option>Goods 7.5 tonnes mgw and over</option>
+              <option>Bus or coach (17 or more pass seats)</option>
+              <option>Minibus (8 - 16 passenger seats)</option>
+              <option>Motorcycle 50cc and under</option>
+              <option>Motorcycle 125cc and under</option>
+              <option>Motorcycle over 125cc and up to 500cc</option>
+              <option>Motorcycle over 500cc</option>
+              <option>Pedal cycle</option>
+              <option>Agricultural vehicle</option>
+              <option>Ridden horse</option>
+              <option>Other vehicle</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="form-actions">
+        <a href="/" class="btn btn-ghost">← Back</a>
+        <button type="submit" class="btn btn-primary">Predict severity ⚡</button>
+      </div>
+    </form>
+  </main>
+
+  <footer class="footer">
+    <p>RoadSafe AI · For educational and analytical use only.</p>
+  </footer>
+
+</body>
+</html>
